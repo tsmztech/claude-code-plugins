@@ -5,7 +5,7 @@
     {
       "name": "salesforce-cli",
       "description": "Salesforce-specific skills, agents, and workflows for Claude Code",
-      "path": "./salesforce-cli"
+      "source": "./salesforce-cli"
     }
   ]
 }

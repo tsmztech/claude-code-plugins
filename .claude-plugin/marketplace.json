@@ -1,0 +1,11 @@
+{
+  "name": "tsmztech",
+  "owner": { "name": "Tapas Mukherjee" },
+  "plugins": [
+    {
+      "name": "salesforce-cli",
+      "description": "Salesforce-specific skills, agents, and workflows for Claude Code",
+      "path": "./salesforce-cli"
+    }
+  ]
+}

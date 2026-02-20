@@ -1,0 +1,8 @@
+{
+  "name": "claude-craft",
+  "description": "Scaffolds Claude Code skills, commands, sub-agents, and hooks with best-practice templates, and keeps reference documentation synced with the latest Claude Code release.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Tapas Mukherjee"
+  }
+}

@@ -1,12 +1,13 @@
 # Claude Code Plugins by tsmztech
 
-A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with Salesforce-focused tools.
+A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with productivity and Salesforce-focused tools.
 
 ## Available Plugins
 
 | Plugin | Description |
 |---|---|
 | [salesforce-cli](./salesforce-cli/) | Salesforce skills for querying data, managing records, bulk operations, and more |
+| [claude-craft](./claude-craft/) | Scaffolds skills, commands, sub-agents, and hooks with best-practice templates and synced docs |
 
 ## Installation
 
@@ -20,6 +21,7 @@ Then install a plugin:
 
 ```
 /plugin install salesforce-cli@tsmztech
+/plugin install claude-craft@tsmztech
 ```
 
 ## Local Development

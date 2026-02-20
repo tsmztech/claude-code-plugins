@@ -1,0 +1,15 @@
+{
+    "description": "claude-craft doc manifest — tracks synced reference docs",
+    "claude_code_version": "2.1.47",
+    "fetched_at": "2026-02-19T18:34:37Z",
+    "status": "current",
+    "docs": {
+      "skills.md": "https://code.claude.com/docs/en/skills.md",
+      "sub-agents.md": "https://code.claude.com/docs/en/sub-agents.md",
+      "hooks-guide.md": "https://code.claude.com/docs/en/hooks-guide.md",
+      "mcp.md": "https://code.claude.com/docs/en/mcp.md",
+      "plugins.md": "https://code.claude.com/docs/en/plugins.md",
+      "output-styles.md": "https://code.claude.com/docs/en/output-styles.md",
+      "agent-teams.md": "https://code.claude.com/docs/en/agent-teams.md"
+    }
+  }

@@ -1,4 +1,5 @@
 ---
+name: check-setup
 description: Check Salesforce CLI prerequisites and org authentication status
 disable-model-invocation: true
 allowed-tools:

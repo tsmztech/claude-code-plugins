@@ -6,6 +6,11 @@
       "name": "salesforce-cli",
       "description": "Salesforce-specific skills, agents, and workflows for Claude Code",
       "source": "./salesforce-cli"
+    },
+    {
+      "name": "claude-craft",
+      "description": "Scaffolds Claude Code skills, commands, sub-agents, and hooks with best-practice templates, and keeps reference documentation synced with the latest Claude Code release.",
+      "source": "./claude-craft"
     }
   ]
 }

@@ -22,7 +22,28 @@
  *   --help, -h         Show this help message
  */
 
-const { execFileSync } = require("child_process");
+const { execFileSync, execSync } = require("child_process");
+
+const isWindows = process.platform === "win32";
+
+function runSf(sfArgs, extraOpts = {}) {
+  const execOpts = {
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+    maxBuffer: 50 * 1024 * 1024,
+    ...extraOpts,
+  };
+  if (isWindows) {
+    const escaped = sfArgs.map((a) => {
+      if (/[() &|<>^%!"]/.test(a)) {
+        return '"' + a.replace(/"/g, '""') + '"';
+      }
+      return a;
+    });
+    return execSync("sf " + escaped.join(" "), execOpts);
+  }
+  return execFileSync("sf", sfArgs, execOpts);
+}
 
 // ── Parse arguments ─────────────────────────────────────────────────────────
 
@@ -100,7 +121,7 @@ console.log();
 
 let result;
 try {
-  const output = execFileSync("sf", sfArgs, { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+  const output = runSf(sfArgs);
   result = JSON.parse(output);
 } catch (err) {
   if (err.stderr) process.stderr.write(err.stderr);

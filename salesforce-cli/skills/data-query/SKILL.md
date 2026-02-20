@@ -1,14 +1,14 @@
 ---
 name: data-query
 description: >
-  Run SOQL (Salesforce Object Query Language) queries against a Salesforce org. Supports all query
-  types: simple SELECT, child-to-parent dot notation (Contact.Account.Name), parent-to-child
-  subqueries (SELECT Id, (SELECT Id FROM Contacts) FROM Account), COUNT queries, aggregate
-  queries with GROUP BY / ROLLUP / CUBE / HAVING, and all SOQL clauses including WHERE, ORDER BY,
-  LIMIT, OFFSET, USING SCOPE, WITH, TYPEOF, FIELDS(), FORMAT(), toLabel(), DISTANCE(), and
-  GEOLOCATION(). Use when the user wants to query Salesforce data, count records, run reports
-  via SOQL, or explore data relationships.
-  Examples: 'query all accounts', 'count contacts', 'run SOQL', 'get opportunities grouped by stage',
+  Run SOQL (Salesforce Object Query Language) queries against a Salesforce org. Supports standard
+  SELECT queries, child-to-parent dot notation (Contact.Account.Name), parent-to-child
+  subqueries (SELECT Id, (SELECT Id FROM Contacts) FROM Account), COUNT queries, and all SOQL
+  clauses including WHERE, ORDER BY, LIMIT, OFFSET, USING SCOPE, WITH, TYPEOF, FIELDS(),
+  FORMAT(), toLabel(), DISTANCE(), and GEOLOCATION(). Use when the user wants to query Salesforce
+  data, count records, run SOQL, or explore data relationships. For aggregate queries (SUM, AVG,
+  MIN, MAX, GROUP BY), use the `salesforce-cli:aggregate-query` skill instead.
+  Examples: 'query all accounts', 'count contacts', 'run SOQL',
   'find accounts near a location', 'SELECT Id FROM Account WHERE Name LIKE "Acme%"'.
 argument-hint: '<SOQL query or natural language> [--target-org <alias>]'
 allowed-tools: Bash, Read
@@ -46,7 +46,9 @@ See `scripts/sf-auth.js --help` for all authentication options.
 
 ## Query Types & Scripts
 
-This skill provides **four scripts**, one for each query pattern. Choose the right one based on what the user needs.
+This skill provides **three scripts**, one for each query pattern. Choose the right one based on what the user needs.
+
+> **Note**: For aggregate queries (SUM, AVG, MIN, MAX with GROUP BY / ROLLUP / CUBE / HAVING), use the `salesforce-cli:aggregate-query` skill instead.
 
 ---
 
@@ -155,54 +157,7 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/count.js "SELECT COUNT() FR
 
 ---
 
-### 3. Aggregate Query
-
-Use for queries with aggregate functions (SUM, AVG, MIN, MAX, COUNT) and GROUP BY / ROLLUP / CUBE / HAVING.
-
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "<SOQL>" [options]
-```
-
-#### Examples
-
-```bash
-# SUM
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT StageName, SUM(Amount) FROM Opportunity GROUP BY StageName"
-
-# AVG
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT Industry, AVG(AnnualRevenue) FROM Account GROUP BY Industry"
-
-# MIN / MAX
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT StageName, MIN(Amount), MAX(Amount) FROM Opportunity GROUP BY StageName"
-
-# Multiple aggregate functions
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT StageName, COUNT(Id), SUM(Amount), AVG(Amount), MIN(CloseDate), MAX(CloseDate) FROM Opportunity GROUP BY StageName"
-
-# GROUP BY ROLLUP (hierarchical subtotals + grand total)
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT LeadSource, Rating, COUNT(Id) FROM Lead GROUP BY ROLLUP(LeadSource, Rating)"
-
-# GROUP BY CUBE (all-combination subtotals)
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT Type, BillingState, COUNT(Id) FROM Account GROUP BY CUBE(Type, BillingState)"
-
-# HAVING clause
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT StageName, SUM(Amount) total FROM Opportunity GROUP BY StageName HAVING SUM(Amount) > 100000"
-
-# HAVING with aggregate comparison
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT AccountId, COUNT(Id) FROM Contact GROUP BY AccountId HAVING COUNT(Id) >= 3"
-
-# GROUP BY with ORDER BY aggregate alias
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT StageName, SUM(Amount) total FROM Opportunity GROUP BY StageName ORDER BY SUM(Amount) DESC"
-
-# Calendar functions in GROUP BY
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT CALENDAR_YEAR(CloseDate), CALENDAR_MONTH(CloseDate), SUM(Amount) FROM Opportunity GROUP BY CALENDAR_YEAR(CloseDate), CALENDAR_MONTH(CloseDate) ORDER BY CALENDAR_YEAR(CloseDate), CALENDAR_MONTH(CloseDate)"
-
-# Against a specific org
-node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/aggregate.js "SELECT StageName, SUM(Amount) FROM Opportunity GROUP BY StageName" --target-org myDevOrg
-```
-
----
-
-### 4. Subquery (Parent-to-Child / Nested Query)
+### 3. Subquery (Parent-to-Child / Nested Query)
 
 Use for queries that include inner SELECT statements to fetch related child records.
 
@@ -241,10 +196,10 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/data-query/scripts/subquery.js "SELECT Id, Nam
 |---|---|---|
 | Fetch records / fields / data | `query.js` | Normal SELECT, dot notation, FIELDS(), TYPEOF |
 | Count records | `count.js` | SELECT COUNT() or COUNT(field) |
-| Summarize / aggregate data | `aggregate.js` | SUM, AVG, MIN, MAX with GROUP BY |
+| Summarize / aggregate data | Use `salesforce-cli:aggregate-query` skill | SUM, AVG, MIN, MAX with GROUP BY |
 | Fetch parent + related child records | `subquery.js` | Inner SELECT inside parentheses |
 
-> **Tip**: If a query has both aggregate functions AND subqueries, it's invalid SOQL — Salesforce doesn't support that combination. If a COUNT query also has GROUP BY with other aggregates, use `aggregate.js` instead.
+> **Tip**: If a query has both aggregate functions AND subqueries, it's invalid SOQL — Salesforce doesn't support that combination. If a COUNT query also has GROUP BY with other aggregates, use the `salesforce-cli:aggregate-query` skill instead.
 
 ## Constructing SOQL from Natural Language
 
@@ -255,7 +210,7 @@ When the user describes what they want in plain English, build the SOQL query fo
 3. **Identify filters** — WHERE conditions, date ranges, picklist values
 4. **Identify sorting** — ORDER BY fields and direction
 5. **Identify limits** — how many records?
-6. **Identify grouping** — any aggregation needed?
+6. **Identify grouping** — any aggregation needed? If so, use `salesforce-cli:aggregate-query` skill.
 7. **Identify relationships** — parent fields (dot notation) or child records (subquery)?
 
 ### SOQL Complete Syntax Reference
@@ -308,17 +263,9 @@ FROM objectType
 | `LAST_N_FISCAL_QUARTERS:n`, `NEXT_N_FISCAL_QUARTERS:n` | Last/next N fiscal quarters |
 | `LAST_N_FISCAL_YEARS:n`, `NEXT_N_FISCAL_YEARS:n` | Last/next N fiscal years |
 
-### Date/Time Functions (for GROUP BY)
-
-`CALENDAR_MONTH()`, `CALENDAR_QUARTER()`, `CALENDAR_YEAR()`, `DAY_IN_MONTH()`, `DAY_IN_WEEK()`, `DAY_IN_YEAR()`, `DAY_ONLY()`, `FISCAL_MONTH()`, `FISCAL_QUARTER()`, `FISCAL_YEAR()`, `HOUR_IN_DAY()`, `WEEK_IN_MONTH()`, `WEEK_IN_YEAR()`, `convertTimezone()`
-
 ### USING SCOPE Options
 
 `Everything`, `Mine`, `Queue`, `Delegated`, `MyTerritory`, `MyTeamTerritory`, `Team`
-
-### Aggregate Functions
-
-`COUNT()`, `COUNT(field)`, `COUNT_DISTINCT(field)`, `SUM(field)`, `AVG(field)`, `MIN(field)`, `MAX(field)`, `GROUPING(field)`
 
 ### Special Functions
 

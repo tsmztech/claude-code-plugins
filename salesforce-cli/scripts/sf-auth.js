@@ -32,6 +32,8 @@
 const { execFileSync, spawnSync } = require("child_process");
 const fs = require("fs");
 
+const isWindows = process.platform === "win32";
+
 // ── Parse arguments ─────────────────────────────────────────────────────────
 
 const argv = process.argv.slice(2);
@@ -116,6 +118,7 @@ function run(cmd, args, opts = {}) {
   const result = spawnSync(cmd, args, {
     encoding: "utf8",
     stdio: opts.inherit ? "inherit" : ["pipe", "pipe", "pipe"],
+    shell: isWindows,
     ...opts,
   });
   if (result.error) {

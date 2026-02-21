@@ -1,0 +1,8 @@
+{
+  "name": "salesforce-dev",
+  "description": "Salesforce development specific skills, agents, and workflows for Claude Code",
+  "version": "1.0.0",
+  "author": {
+    "name": "Tapas Mukherjee"
+  }
+}

@@ -29,9 +29,12 @@ claude --plugin-dir ./salesforce-cli
 | `describe-object` | Inspect an object's fields, relationships, picklist values, and metadata |
 | `search-objects` | Search for standard and custom objects by name pattern |
 | `data-query` | Run SOQL queries — SELECT, COUNT, aggregate, subqueries, and all SOQL clauses |
+| `aggregate-query` | Run SOQL aggregate queries — SUM, AVG, MIN, MAX, COUNT with GROUP BY, ROLLUP, CUBE, and HAVING |
 | `dml-operations` | Insert, update, and upsert single records using field=value pairs |
 | `bulk-import` | Bulk insert, upsert, or update records from a CSV file via Bulk API v2 |
 | `data-export` | Export query results to CSV or JSON files with automatic pagination |
+| `apex-execute` | Execute Anonymous Apex code against a Salesforce org |
+| `debug-log` | Manage debug logs and trace flags — set, remove, list, retrieve, and analyze logs |
 
 ## Commands
 
@@ -50,9 +53,12 @@ claude --plugin-dir ./salesforce-cli
 ```
 Describe the Account object
 Query all opportunities closed this quarter
+Get total revenue by stage for this quarter
 Insert a new Contact named John Smith
 Export all leads to leads.csv
 Bulk import accounts from data.csv
+Execute anonymous Apex to update all stale leads
+Set a debug trace flag and analyze the latest log
 ```
 
 ## Authentication

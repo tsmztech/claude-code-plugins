@@ -9,7 +9,7 @@ description: >
   'security review', '.cls', '.trigger', or class names following Salesforce patterns
   (Handler, Service, Controller, Helper, Batch, Selector, Test). Do NOT use for LWC/Aura
   JavaScript reviews or declarative automation reviews.
-allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
+allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion, Task
 ---
 
 # Apex Code Review
@@ -123,62 +123,89 @@ Wait for their response before proceeding.
 
 ## Phase 3: Analyze Code
 
+Count the files to review. This determines the analysis approach because loading all
+source code into a single context wastes tokens and limits scalability:
+
+- **1 file**: Review inline in this context (Path A)
+- **2+ files**: Dispatch one sub-agent per file for parallel review (Path B)
+
+---
+
+### Path A: Inline Review (1 file)
+
 Load the comprehensive rules from [references/apex-review-rules.md](references/apex-review-rules.md).
 
-For each file, systematically check against ALL rule categories:
+Systematically check the code against ALL rule categories in that reference:
+Security (CRITICAL), Governor Limits (HIGH), Error Handling (HIGH), Performance (HIGH),
+Design (MEDIUM), Testing (MEDIUM, for test classes), Maintainability (MEDIUM),
+Code Style (LOW), Recommendations (INFO).
 
-### Security (CRITICAL priority)
-- SEC-01: SOQL injection (dynamic SOQL with user input)
-- SEC-02: Missing CRUD/FLS enforcement (no `WITH USER_MODE`, no describe checks)
-- SEC-03: Missing sharing declaration (no `with sharing`/`inherited sharing`/`without sharing`)
-- SEC-04: Insecure endpoints (HTTP instead of HTTPS)
-- SEC-05: Hardcoded credentials
-- SEC-06: XSS vulnerabilities
-- SEC-07: Bad crypto practices
-- SEC-08: Open redirect
-- SEC-09: CSRF vulnerability
-
-### Governor Limits (HIGH priority)
-- GOV-01: SOQL queries inside loops
-- GOV-02: DML statements inside loops
-- GOV-03: Callouts inside loops
-- GOV-04: Non-bulkified trigger code
-- GOV-05: Non-selective queries on large objects
-
-### Error Handling (HIGH priority)
-- ERR-01: Empty catch blocks
-- ERR-02: Catching generic Exception instead of specific types
-- ERR-03: Business logic directly in triggers
-
-### Performance (HIGH priority)
-- PERF-01: Expensive operations in loops
-- PERF-02: Non-restrictive queries (no WHERE/LIMIT)
-
-### Design (MEDIUM priority)
-- DES-01 to DES-05: Complexity, method length, parameter count, god classes, nesting
-
-### Testing (MEDIUM priority -- for test classes)
-- TST-01 to TST-06: Assertions, seeAllData, runAs, bulk testing, negative testing
-
-### Maintainability (MEDIUM priority)
-- MAINT-01: Hardcoded IDs
-- MAINT-02: Magic numbers/strings
-- MAINT-03: Hardcoded URLs
-
-### Code Style (LOW priority)
-- STYLE-01 to STYLE-10: Naming, braces, debug statements, unused code, empty blocks
-
-### Recommendations (INFO)
-- REC-01 to REC-08: Cacheable methods, queueable over future, platform cache, etc.
-
-### Analysis Guidelines
-
+Guidelines:
 - Be thorough but avoid false positives -- only flag actual violations
 - For each finding, identify the EXACT line number(s)
 - Provide a concrete code fix, not just a description of the problem
 - Consider the context: a `without sharing` class may be intentional if documented
-- Check relationships between files: does a trigger have a handler? Does a service have tests?
-- For test classes, also check: coverage strategy, data factory usage, bulk testing, negative paths
+- For test classes, check: coverage strategy, data factory usage, bulk testing, negative paths
+
+After analysis, proceed to Phase 4.
+
+---
+
+### Path B: Sub-agent Review (2+ files)
+
+Dispatch one Task sub-agent per file. Launch ALL sub-agents in parallel by sending
+all Task tool calls in a single message.
+
+For each file, use:
+
+    Task tool parameters:
+      subagent_type: "general-purpose"
+      description: "Review [ClassName]"
+      prompt: (construct from the template below)
+
+**Sub-agent prompt template** -- fill in [bracketed values] for each file:
+
+    You are an Apex code review expert. Review the following Apex source code against
+    Salesforce best practices, security guidelines, and governor limit awareness.
+
+    STEP 1: Read the comprehensive review rules from this file:
+    ${SKILL_DIR}/references/apex-review-rules.md
+
+    STEP 2: Analyze the source code below against EVERY rule category in that file.
+
+    File: [filename]
+    Type: [Class / Trigger / Test Class]
+
+    ```apex
+    [paste the full source code here]
+    ```
+
+    STEP 3: Report findings. For each violation found, provide:
+    - Severity: CRITICAL / HIGH / MEDIUM / LOW / INFO
+    - Rule ID: e.g., SEC-01, GOV-02, DES-03
+    - Line(s): exact line number(s)
+    - Issue: what is wrong and why it matters
+    - Current code: the problematic snippet
+    - Recommended fix: concrete corrected code
+
+    Guidelines:
+    - Be thorough but avoid false positives -- only flag actual violations
+    - When uncertain about intent (e.g., without sharing might be intentional),
+      flag as INFO with a note to verify rather than as CRITICAL
+    - For test classes, evaluate assertion quality, data factory usage, bulk testing
+
+    End with a one-line summary: "[filename]: [N] findings, ~[M] lines analyzed"
+
+### After all sub-agents complete
+
+1. Collect all findings from the sub-agent results
+2. Perform cross-file analysis that individual sub-agents cannot do:
+   - Does every trigger have a corresponding handler class?
+   - Do service classes have corresponding test classes?
+   - Are there circular dependencies or unclear responsibilities between classes?
+   - Do test classes adequately cover the classes they test?
+3. Add any cross-file findings (severity MEDIUM or INFO) to the combined results
+4. Proceed to Phase 4 with all findings aggregated
 
 ---
 
@@ -298,8 +325,6 @@ After presenting the report, ask the user:
   flag it as INFO with a note to verify rather than as CRITICAL
 - If reviewing test classes, also evaluate the quality of assertions and coverage
   strategy, not just whether tests exist
-- For multi-file reviews, check cross-file concerns:
-  - Does every trigger have a corresponding handler class?
-  - Do service classes have corresponding test classes?
-  - Are there circular dependencies or unclear responsibilities?
+- Cross-file concerns (trigger/handler, service/test relationships) are checked in the
+  main context after sub-agents complete, because sub-agents only see one file each
 - The review should be educational: explain WHY each rule matters, not just what's wrong

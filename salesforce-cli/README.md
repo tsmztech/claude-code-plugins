@@ -35,6 +35,7 @@ claude --plugin-dir ./salesforce-cli
 | `data-export` | Export query results to CSV or JSON files with automatic pagination |
 | `apex-execute` | Execute Anonymous Apex code against a Salesforce org |
 | `debug-log` | Manage debug logs and trace flags — set, remove, list, retrieve, and analyze logs |
+| `dashboard` | Generate interactive HTML dashboards with Chart.js charts, data tables, and KPI cards from Salesforce data |
 
 ## Commands
 
@@ -59,6 +60,8 @@ Export all leads to leads.csv
 Bulk import accounts from data.csv
 Execute anonymous Apex to update all stale leads
 Set a debug trace flag and analyze the latest log
+Create a dashboard showing my opportunity pipeline
+Visualize revenue by stage as a bar chart
 ```
 
 ## Authentication
